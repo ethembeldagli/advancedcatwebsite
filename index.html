@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cat Meme Machine 🐱</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #fff;
+      padding: 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: -1px;
+      text-shadow: 0 0 30px rgba(255, 175, 0, 0.6);
+    }
+
+    header p {
+      margin-top: 0.4rem;
+      font-size: 1rem;
+      opacity: 0.7;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(16px);
+      border-radius: 1.5rem;
+      overflow: hidden;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover { transform: translateY(-4px); }
+
+    .image-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #0f3460;
+      overflow: hidden;
+    }
+
+    #cat-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.4s ease;
+    }
+
+    #cat-img.loading { opacity: 0; }
+
+    .spinner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .spinner.hidden { opacity: 0; }
+
+    .card-body {
+      padding: 1.5rem 1.75rem 1.75rem;
+    }
+
+    #caption {
+      font-size: clamp(1.1rem, 3vw, 1.4rem);
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.4;
+      min-height: 2.8em;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      color: #ffd700;
+      margin-bottom: 1.25rem;
+    }
+
+    #meme-counter {
+      text-align: center;
+      font-size: 0.78rem;
+      opacity: 0.5;
+      margin-bottom: 1.25rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 2rem;
+      padding: 0.75rem 1.75rem;
+      font-size: 1rem;
+      font-weight: 700;
+      transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+    }
+
+    button:active { transform: scale(0.96); }
+
+    #next-btn {
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      color: #1a1a2e;
+      box-shadow: 0 4px 20px rgba(247, 151, 30, 0.4);
+    }
+
+    #next-btn:hover { filter: brightness(1.1); box-shadow: 0 6px 28px rgba(247, 151, 30, 0.55); }
+
+    #share-btn {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    #share-btn:hover { background: rgba(255,255,255,0.2); }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(6rem);
+      background: rgba(30, 30, 50, 0.95);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border-radius: 2rem;
+      font-size: 0.9rem;
+      pointer-events: none;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    footer {
+      margin-top: 2rem;
+      font-size: 0.75rem;
+      opacity: 0.4;
+      text-align: center;
+    }
+
+    footer a { color: inherit; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🐱 Cat Meme Machine</h1>
+    <p>Powered by AssemblyScript + WebAssembly</p>
+  </header>
+
+  <div class="card">
+    <div class="image-wrap">
+      <img id="cat-img" src="" alt="Random cat" class="loading" />
+      <div class="spinner" id="spinner">🐾</div>
+    </div>
+    <div class="card-body">
+      <p id="caption">Loading meme…</p>
+      <p id="meme-counter"></p>
+      <div class="btn-row">
+        <button id="next-btn">🎲 Next Meme</button>
+        <button id="share-btn">📋 Copy Caption</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <footer>
+    Cat images from <a href="https://cataas.com" target="_blank" rel="noopener">cataas.com</a> •
+    Captions served by WebAssembly
+  </footer>
+
+  <script type="module">
+    import { getMemeCount, getMemeCaption, getRandomIndex } from "./build/release.js";
+
+    const img        = document.getElementById("cat-img");
+    const caption    = document.getElementById("caption");
+    const counter    = document.getElementById("meme-counter");
+    const nextBtn    = document.getElementById("next-btn");
+    const shareBtn   = document.getElementById("share-btn");
+    const spinner    = document.getElementById("spinner");
+    const toast      = document.getElementById("toast");
+
+    const TOTAL = getMemeCount();
+    let currentIndex = 0;
+    let seed = Date.now() | 0;
+
+    /** Show a transient notification toast. */
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+
+    /** Load a cat image that reflects the given caption index for variety. */
+    function loadCatImage(index) {
+      spinner.classList.remove("hidden");
+      img.classList.add("loading");
+
+      // Use different image tags per index so the browser doesn't cache the same URL
+      const tags = [
+        "cute", "funny", "sleepy", "grumpy", "kitten",
+        "tabby",  "black", "orange", "fluffy", "silly",
+        "chonky", "loaf",  "box",    "window", "hat",
+        "sunglasses", "nap", "yawn", "zoom", "snack",
+      ];
+      const tag = tags[index % tags.length];
+      const url = `https://cataas.com/cat/${encodeURIComponent(tag)}?${Date.now()}`;
+
+      const probe = new Image();
+      probe.onload = () => {
+        img.src = probe.src;
+        img.classList.remove("loading");
+        spinner.classList.add("hidden");
+      };
+      probe.onerror = () => {
+        // Fallback: plain random cat if tag not found
+        const fallback = new Image();
+        fallback.onload = () => {
+          img.src = fallback.src;
+          img.classList.remove("loading");
+          spinner.classList.add("hidden");
+        };
+        fallback.onerror = () => {
+          img.src = "";
+          img.classList.remove("loading");
+          spinner.classList.add("hidden");
+        };
+        fallback.src = `https://cataas.com/cat?${Date.now()}`;
+      };
+      probe.src = url;
+    }
+
+    /** Display a meme at the given caption index. */
+    function showMeme(index) {
+      currentIndex = ((index % TOTAL) + TOTAL) % TOTAL;
+      caption.textContent = getMemeCaption(currentIndex);
+      counter.textContent = `Meme ${currentIndex + 1} of ${TOTAL}`;
+      loadCatImage(currentIndex);
+    }
+
+    nextBtn.addEventListener("click", () => {
+      seed = (seed * 1664525 + 1013904223) | 0;
+      showMeme(getRandomIndex(seed));
+    });
+
+    shareBtn.addEventListener("click", async () => {
+      const text = `🐱 "${getMemeCaption(currentIndex)}" — Cat Meme Machine`;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("📋 Caption copied to clipboard!");
+      } catch {
+        showToast("Couldn't access clipboard — copy manually.");
+      }
+    });
+
+    // Kick off with a random meme
+    showMeme(getRandomIndex(seed));
+  </script>
+</body>
+</html>
